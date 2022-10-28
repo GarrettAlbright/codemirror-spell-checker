@@ -3,7 +3,7 @@
 
 
 // Requires
-var Typo = require("typo-js");
+// var Typo = require("typo-js");
 
 
 // Create function
@@ -71,13 +71,19 @@ function CodeMirrorSpellChecker(options) {
 
 
 		// Define what separates a word
-		var rx_word = "!\"#$%&()*+,-./:;<=>?@[\\]^_`{|}~ ";
+		var rx_word = "!\"#$%&()*+,-./:;<=>?@[\\]^_`{|}~ ”“";
+
+		const numMatch = new RegExp(/^\d+$/);
+		const beforeAfterCurlyQuoteMatch = new RegExp(/(^‘|’$)/);
 
 		// Get array of custom words
 		var customWords;
-		
+
 		if(options.customWords && options.customWords instanceof Array) {
-			customWords = options.customWords || [];
+			customWords = options.customWords;
+		}
+		else {
+			customWords = [];
 		}
 
 		// Create the overlay and such
@@ -96,7 +102,18 @@ function CodeMirrorSpellChecker(options) {
 					stream.next();
 				}
 
-				if(CodeMirrorSpellChecker.typo && !CodeMirrorSpellChecker.typo.check(word) && !~customWords.indexOf(word))
+				// Don't spell check numbers
+				if (word.match(numMatch)) {
+					return null;
+				}
+
+				// For matching, remove quotes at beginning or ending of word, and
+				// straighten curly apostrophes.
+				const toMatch = word
+					.replace(beforeAfterCurlyQuoteMatch, "")
+					.replaceAll("’", "'");
+
+				if(CodeMirrorSpellChecker.typo && !CodeMirrorSpellChecker.typo.check(toMatch) && !~customWords.indexOf(toMatch))
 					return "spell-error"; // CSS class: cm-spell-error
 
 				return null;
@@ -122,4 +139,4 @@ CodeMirrorSpellChecker.typo;
 
 
 // Export
-module.exports = CodeMirrorSpellChecker;
+// module.exports = CodeMirrorSpellChecker;
